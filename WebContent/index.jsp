@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-        <title>Ray's Grocery Main Page</title>
+        <title>S and S Grocery Main Page</title>
 </head>
 <body>
 <h1 align="center">Welcome to S&S Grocery</h1>

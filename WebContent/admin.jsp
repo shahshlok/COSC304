@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Administrator Page - Total Sales by Day</title>
+    <title>Administrator Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,29 +15,28 @@
             margin-bottom: 20px;
             font-weight: bold;
         }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
         table {
             width: 100%;
-            margin-top: 20px;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
         }
         th {
-            background-color: #007bff;
-            color: #fff;
-            text-align: center;
+            background-color: #4CAF50;
+            color: white;
         }
-        td, th {
-            padding: 12px;
-            border: 1px solid #ddd;
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
         }
         .error-message {
-            color: #dc3545;
+            color: red;
             font-weight: bold;
             margin-top: 20px;
         }
@@ -61,7 +60,7 @@
              PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
-            out.println("<table class='table table-striped table-bordered'>");
+            out.println("<table>");
             out.println("<thead><tr><th>Date</th><th>Total Sales</th></tr></thead>");
             out.println("<tbody>");
 
@@ -73,12 +72,30 @@
 
             out.println("</tbody></table>");
 
+            // Customer List Section
+            out.println("<h2>Customer List</h2>");
+            String customerSql = "SELECT customerId, firstName + ' ' + lastName as customerName FROM customer ORDER BY customerId";
+            PreparedStatement customerStmt = con.prepareStatement(customerSql);
+            ResultSet customerRs = customerStmt.executeQuery();
+
+            out.println("<table>");
+            out.println("<thead><tr><th>Customer ID</th><th>Customer Name</th></tr></thead>");
+            out.println("<tbody>");
+
+            while (customerRs.next()) {
+                out.println("<tr>");
+                out.println("<td>" + customerRs.getInt("customerId") + "</td>");
+                out.println("<td>" + customerRs.getString("customerName") + "</td>");
+                out.println("</tr>");
+            }
+
+            out.println("</tbody></table>");
+
         } catch (SQLException e) {
-            out.println("<p class='error-message'>Error retrieving sales data: " + e.getMessage() + "</p>");
+            out.println("<p class='error-message'>Error retrieving data: " + e.getMessage() + "</p>");
         }
     %>
 </div>
 
 </body>
 </html>
-

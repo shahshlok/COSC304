@@ -7,179 +7,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>YOUR NAME Grocery</title>
-	<style>
-		body {
-			font-family: Arial, sans-serif;
-			background-color: #f4f4f4;
-			margin: 0;
-			padding: 20px;
-		}
-		h1 {
-			color: #333;
-		}
-		form {
-			margin-bottom: 20px;
-		}
-		input[type="text"], select {
-			padding: 10px;
-			width: 300px;
-			border-radius: 5px;
-			border: 1px solid #ccc;
-			margin-right: 10px;
-		}
-		input[type="submit"], input[type="reset"] {
-			padding: 10px 20px;
-			background-color: #28a745;
-			color: white;
-			border: none;
-			border-radius: 5px;
-			cursor: pointer;
-		}
-		input[type="reset"] {
-			background-color: #dc3545;
-		}
-		.product-list {
-			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-			gap: 20px;
-			margin-top: 20px;
-		}
-		.product-item {
-			background-color: white;
-			padding: 15px;
-			border-radius: 5px;
-			box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-			display: flex;
-			flex-direction: column;
-			align-items: start;
-		}
-		.addcart {
-			margin-top: 10px;
-			padding: 8px 12px;
-			background-color: #007bff;
-			color: white;
-			border-radius: 5px;
-			text-align: center;
-			text-decoration: none;
-			cursor: pointer;
-		}
-		.addcart:hover {
-			background-color: #0056b3;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SportifyHub - Your Sports Store</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #f59e0b;
+            --text-color: #1f2937;
+            --background-color: #f3f4f6;
+            --card-background: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+        }
+
+        .product-list {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+        }
+
+        .product-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .add-to-cart {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            margin-top: auto;
+        }
+
+        .add-to-cart:hover {
+            background-color: #1d4ed8;
+        }
+
+        @media (max-width: 768px) {
+            .product-list {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+    </style>
 </head>
 <body>
+    <%@ include file="header.jsp" %>
 
-<h1>Search for the products you want to buy:</h1>
+    <main class="product-list">
+        <%
+            // Retrieve parameters
+            String nameOrId = request.getParameter("productName");
+            String category = request.getParameter("category");
 
-<!-- Search form for product name or ID -->
-<form method="get" action="listprod.jsp">
-	<input type="text" name="productName" placeholder="Enter product name or ID...">
-	<input type="submit" value="Submit">
-	<input type="reset" value="Reset"> (Leave blank for all products)
-</form>
+            // Load SQL Server driver
+            try {
+                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            } catch (java.lang.ClassNotFoundException e) {
+                out.println("ClassNotFoundException: " + e);
+            }
 
-<!-- Dropdown filter for category -->
-<form method="get" action="listprod.jsp">
-	<select name="category">
-		<option value="">All Categories</option>
-		<%
-			// Load SQL Server driver
-			try {
-				Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-			} catch (java.lang.ClassNotFoundException e) {
-				out.println("ClassNotFoundException: " + e);
-			}
+            // Set up the query and conditions
+            String query = "SELECT product.productId, product.productName, product.productPrice, product.productImageURL " +
+                           "FROM product JOIN category ON product.categoryId = category.categoryId WHERE 1=1 ";
 
-			// Query to get categories
-			try (Connection con = DriverManager.getConnection(url, uid, pw)) {
-				String categoryQuery = "SELECT categoryName FROM category";
-				PreparedStatement categoryStatement = con.prepareStatement(categoryQuery);
-				ResultSet categoryResult = categoryStatement.executeQuery();
+            // Adjust the query based on which parameter is present
+            if (nameOrId != null && !nameOrId.isEmpty()) {
+                // Check if the input is numeric to search by product ID
+                boolean isNumeric = nameOrId.matches("\\d+");
+                if (isNumeric) {
+                    query += " AND product.productId = ?";
+                } else {
+                    query += " AND product.productName LIKE ?";
+                }
+            } else if (category != null && !category.isEmpty()) {
+                query += " AND category.categoryName = ?";
+            }
 
-				// Populate the dropdown with category names
-				while (categoryResult.next()) {
-					String categoryName = categoryResult.getString("categoryName");
-		%>
-					<option value="<%= categoryName %>"><%= categoryName %></option>
-		<%
-				}
-			} catch (SQLException e) {
-				out.println("Error fetching categories: " + e);
-			}
-		%>
-	</select>
-	<input type="submit" value="Filter by Category">
-</form>
+            try (Connection con = DriverManager.getConnection(url, uid, pw);
+                 PreparedStatement preparedStatement = con.prepareStatement(query)) {
 
-<div class="product-list">
-	<%
-		// Retrieve parameters
-		String nameOrId = request.getParameter("productName");
-		String category = request.getParameter("category");
+                // Set the parameters based on search type
+                int paramIndex = 1;
+                if (nameOrId != null && !nameOrId.isEmpty()) {
+                    if (nameOrId.matches("\\d+")) {
+                        preparedStatement.setInt(paramIndex++, Integer.parseInt(nameOrId));
+                    } else {
+                        preparedStatement.setString(paramIndex++, "%" + nameOrId + "%");
+                    }
+                } else if (category != null && !category.isEmpty()) {
+                    preparedStatement.setString(paramIndex, category);
+                }
 
-		// Load SQL Server driver
-		try {
-			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-		} catch (java.lang.ClassNotFoundException e) {
-			out.println("ClassNotFoundException: " + e);
-		}
+                ResultSet rst = preparedStatement.executeQuery();
 
-		// Set up the query and conditions
-		String query = "SELECT product.productId, product.productName, product.productPrice " +
-                       "FROM product JOIN category ON product.categoryId = category.categoryId WHERE 1=1 ";
+                // Display each product
+                while (rst.next()) {
+                    int productId = rst.getInt("productId");
+                    String productName = rst.getString("productName");
+                    double productPrice = rst.getDouble("productPrice");
+                    String productImageURL = rst.getString("productImageURL");
 
-		// Adjust the query based on which parameter is present
-		if (nameOrId != null && !nameOrId.isEmpty()) {
-			// Check if the input is numeric to search by product ID
-			boolean isNumeric = nameOrId.matches("\\d+");
-			if (isNumeric) {
-				query += " AND product.productId = ?";
-			} else {
-				query += " AND product.productName LIKE ?";
-			}
-		} else if (category != null && !category.isEmpty()) {
-			query += " AND category.categoryName = ?";
-		}
-
-		try (Connection con = DriverManager.getConnection(url, uid, pw);
-		     PreparedStatement preparedStatement = con.prepareStatement(query)) {
-
-			// Set the parameters based on search type
-			int paramIndex = 1;
-			if (nameOrId != null && !nameOrId.isEmpty()) {
-				if (nameOrId.matches("\\d+")) {
-					preparedStatement.setInt(paramIndex++, Integer.parseInt(nameOrId));
-				} else {
-					preparedStatement.setString(paramIndex++, "%" + nameOrId + "%");
-				}
-			} else if (category != null && !category.isEmpty()) {
-				preparedStatement.setString(paramIndex, category);
-			}
-
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			// Display each product
-			while (resultSet.next()) {
-				String pname = resultSet.getString("productName");
-				int pid = resultSet.getInt("productId");
-				int pp = resultSet.getInt("productPrice");
-	%>
-	<div class="product-item">
-		<a href="product.jsp?id=<%= pid %>"><strong><%= pname %></strong></a><br>
-		<span>Price: $<%= pp %></span>
-		<a class="addcart" href="<%= "addcart.jsp?id=" + pid + "&name=" + URLEncoder.encode(pname, StandardCharsets.UTF_8) + "&price=" + pp %>">Add to cart</a>
-	</div>
-	<%
-			}
-		} catch (SQLException e) {
-			out.println(e);
-		}
-	%>
-</div>
-
+                    String addCartLink = "addcart.jsp?id=" + productId + "&name=" + URLEncoder.encode(productName, StandardCharsets.UTF_8) + "&price=" + productPrice;
+                    String productDetailsLink = "product.jsp?id=" + productId;
+        %>
+                    <div class="product-card">
+                        <img src="<%= productImageURL %>" alt="<%= productName %>" class="product-image" onerror="this.src='img/default.jpg'">
+                        <a href="<%= productDetailsLink %>" class="product-name"><%= productName %></a>
+                        <div class="product-price">$<%= String.format("%.2f", productPrice) %></div>
+                        <a href="<%= addCartLink %>" class="add-to-cart">
+                            <i class="fas fa-shopping-cart"></i>
+                            Add to Cart
+                        </a>
+                    </div>
+        <%
+                }
+            } catch (SQLException ex) {
+                out.println(ex);
+            }
+        %>
+    </main>
 </body>
 </html>

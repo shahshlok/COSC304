@@ -74,7 +74,7 @@
     <p>Please enter your Customer ID and Password to complete the transaction:</p>
 
     <form method="get" action="order.jsp">
-        <label for="customerId">Customer ID</label>
+        <label for="customerId">User Name</label>
         <input type="text" name="customerId" id="customerId" required>
 
         <label for="customerPassword">Password</label>
